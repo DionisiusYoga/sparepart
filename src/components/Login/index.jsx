@@ -79,7 +79,7 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me & Forgot Password
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -96,7 +96,7 @@ const Login = () => {
               >
                 Forgot Password?
               </button>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <button

@@ -91,7 +91,7 @@ const SideNavigation = ({ menu, submenu, konten }) => {
               height: "100vh",
               overflow: "auto",
             }}
-            width={"32vh"}
+            width={"28vh"}
           >
             <Space
               align="center"
@@ -100,9 +100,9 @@ const SideNavigation = ({ menu, submenu, konten }) => {
               className="mt-4 mb-2"
             >
               <Image
-                src="/images/logo.png"
-                width={collapsed ? 50 : 70}
-                height={collapsed ? 50 : 70}
+                src="/logo-sparepart.png"
+                width={collapsed ? 60 : 100}
+                height={collapsed ? 60 : 100}
                 preview={false}
               />
             </Space>
@@ -115,46 +115,48 @@ const SideNavigation = ({ menu, submenu, konten }) => {
               items={[
                 {
                   key: "1",
-                  icon: <ProductOutlined />,
+                  icon: <ProductOutlined style={{ fontSize: "22px" }} />,
                   label: "Daftar Part Induk",
-                  onClick: () => router.push("/dashboard"),
+                  onClick: () => router.push("/"),
                 },
                 {
-                  key: "6",
-                  icon: <SettingOutlined />,
+                  key: "2",
+                  icon: <SettingOutlined style={{ fontSize: "22px" }} />,
                   label: "Kelola Data",
                   children: [
                     {
-                      key: "6-1",
-                      icon: <UserOutlined />,
+                      key: "2-1",
+                      icon: <UserOutlined style={{ fontSize: "20px" }} />,
                       label: "Part Induk",
-                      onClick: () => router.push("/pengaturan/akun"),
+                      onClick: () => router.push("/kelola/partinduk"),
                     },
                     {
-                      key: "6-2",
-                      icon: <OrderedListOutlined />,
+                      key: "2-2",
+                      icon: (
+                        <OrderedListOutlined style={{ fontSize: "20px" }} />
+                      ),
                       label: "Part Anak",
-                      onClick: () => router.push("/pengaturan/kategori"),
+                      onClick: () => router.push("/kelola/partanak"),
                     },
                     {
-                      key: "6-3",
-                      icon: <ProductOutlined />,
+                      key: "2-3",
+                      icon: <ProductOutlined style={{ fontSize: "20px" }} />,
                       label: "Material",
-                      onClick: () => router.push("/pengaturan/subkategori"),
+                      onClick: () => router.push("/kelola/material"),
                     },
                     {
-                      key: "6-4",
-                      icon: <BuildOutlined />,
+                      key: "2-4",
+                      icon: <BuildOutlined style={{ fontSize: "20px" }} />,
                       label: "Supplier",
-                      onClick: () => router.push("/pengaturan/sumber"),
-                    },
-                    {
-                      key: "6-5",
-                      icon: <InfoCircleOutlined />,
-                      label: "Tentang",
-                      onClick: () => router.push("/pengaturan/tentang"),
+                      onClick: () => router.push("/kelola/supplier"),
                     },
                   ],
+                },
+                {
+                  key: "3",
+                  icon: <InfoCircleOutlined style={{ fontSize: "20px" }} />,
+                  label: "About",
+                  onClick: () => router.push("/about"),
                 },
               ]}
             />

@@ -10,6 +10,14 @@
   box-sizing: border-box;
 }
 
+body {
+  visibility: hidden;
+}
+
+body.loaded {
+  visibility: visible;
+}
+
 img {
   transition: 0.3s ease all;
   -webkit-transition: 0.3s ease all;

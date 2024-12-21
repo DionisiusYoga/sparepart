@@ -76,6 +76,11 @@ const SideNavigation = ({ menu, submenu, konten }) => {
   let key1 = { menu };
   let key2 = { submenu };
 
+  useEffect(() => {
+    document.body.classList.add("loaded");
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <>
       {true ? (
@@ -97,13 +102,14 @@ const SideNavigation = ({ menu, submenu, konten }) => {
               align="center"
               direction="vertical"
               style={{ display: "flex" }}
-              className="mt-4 mb-2"
+              className="mt-8 mb-8"
             >
               <Image
                 src="/logo-sparepart.png"
-                width={collapsed ? 60 : 100}
-                height={collapsed ? 60 : 100}
+                width={collapsed ? 60 : 128}
+                height={collapsed ? 60 : 128}
                 preview={false}
+                className="rounded-lg"
               />
             </Space>
 
@@ -168,7 +174,7 @@ const SideNavigation = ({ menu, submenu, konten }) => {
                 backgroundColor: "transparent",
               }}
             >
-              <Button
+              {/* <Button
                 type="text"
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={() => setCollapsed(!collapsed)}
@@ -176,7 +182,7 @@ const SideNavigation = ({ menu, submenu, konten }) => {
                   width: 64,
                   height: 64,
                 }}
-              />
+              /> */}
 
               <Space
                 direction="horizontal"
@@ -403,7 +409,7 @@ const SideNavigation = ({ menu, submenu, konten }) => {
           </Layout>
         </Layout>
       ) : (
-        redirect("/")
+        redirect("/login")
       )}
     </>
   );

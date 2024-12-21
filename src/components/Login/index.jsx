@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 const Login = () => {
@@ -11,6 +11,11 @@ const Login = () => {
     e.preventDefault();
     // Handle login logic here
   };
+
+  useEffect(() => {
+    document.body.classList.add("loaded");
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center p-4">

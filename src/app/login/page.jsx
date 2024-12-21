@@ -1,8 +1,9 @@
 import React from "react";
 import Login from "@/components/Login";
+import SideNavigation from "@/components/SideNavigation";
 
-const page = () => {
+const Page = () => {
   return <Login />;
 };
 
-export default page;
+export default Page;

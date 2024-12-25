@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +18,7 @@ const Login = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center p-4 font-mono">
       <div className="w-full max-w-md">
         {/* Card container with glass effect */}
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 space-y-8">
@@ -35,19 +35,19 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">
-                Email Address
+              <label className="text-sm font-medium text-gray-700 block ml-1">
+                Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg bg-white/50 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all duration-200"
-                  placeholder="name@company.com"
+                  placeholder="Username"
                   required
                 />
               </div>
@@ -55,7 +55,7 @@ const Login = () => {
 
             {/* Password Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">
+              <label className="text-sm font-medium text-gray-700 block ml-1">
                 Password
               </label>
               <div className="relative">
@@ -67,7 +67,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg bg-white/50 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all duration-200"
-                  placeholder="••••••••"
+                  placeholder="Password"
                   required
                 />
                 <button
@@ -76,9 +76,9 @@ const Login = () => {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
                     <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                   )}
                 </button>
               </div>
@@ -112,13 +112,12 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Sign Up Link */}
-          <p className="text-center text-sm text-gray-600">
+          {/* <p className="text-center text-sm text-gray-600">
             Don't have an account?{" "}
             <button className="text-indigo-600 hover:text-indigo-500 font-medium">
               Sign up now
             </button>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

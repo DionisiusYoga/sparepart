@@ -34,7 +34,10 @@ const ScrollToTop = () => {
         className="fixed bottom-10 right-10 p-4 bg-emerald-500 text-white rounded-full shadow-black-300 shadow-md hover:bg-emerald-600 opacity-85 hover:opacity-95 transition-colors"
         aria-label="Scroll to top"
       >
-        <VerticalAlignTopOutlined className="text-2xl" />
+        <VerticalAlignTopOutlined
+          className="text-2xl"
+          aria-label="Scroll to top"
+        />
       </button>
     )
   );

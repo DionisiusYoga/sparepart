@@ -226,6 +226,7 @@ const Dashboard = () => {
                   minHeight: "607px",
                   gap: "16px",
                 }}
+                className="rounded-md shadow-sm"
               >
                 <Card
                   title={

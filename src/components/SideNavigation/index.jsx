@@ -402,7 +402,7 @@ const SideNavigation = ({ menu, submenu, konten }) => {
               }}
             >
               <div className="w-full max-w-screen-xl">{konten}</div>
-              {/* <FloatingButton /> */}
+              <FloatingButton />
             </Content>
 
             {/* <Footer /> */}

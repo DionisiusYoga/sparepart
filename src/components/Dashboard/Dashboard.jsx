@@ -28,7 +28,7 @@ const Dashboard = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isDraftVisible, setIsDraftVisible] = useState(true);
 
   const [initialData, setInitialData] = useState([]);
@@ -37,7 +37,7 @@ const Dashboard = () => {
   const [currentCartPage, setCurrentCartPage] = useState(1);
   const cartPageSize = 7; // Items per page in cart
 
-  const router = useRouter()
+  const router = useRouter();
 
   const fetchPartInduk = async () => {
     try {
@@ -47,23 +47,24 @@ const Dashboard = () => {
         nomor_pi: row.no_pi,
         nomor_pi_update: row.no_pi_update,
       }));
-      setInitialData(partindukData)
-
+      setInitialData(partindukData);
     } catch (error) {
       console.error("Error fetching data: ", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRowClick = async (event, record) => {
     let paramsData = "";
     try {
-      const response = await axios.post('api/partinduk', {
+      const response = await axios.post("api/partinduk", {
         key: record.key,
-      })
+      });
 
-      paramsData = response?.data?.rows[0]?.no_pi
+      paramsData = response?.data?.rows[0]?.no_pi;
     } catch (error) {
-      console.error("Error fetching data: ", error)
+      console.error("Error fetching data: ", error);
     }
 
     const isCheckbox =
@@ -99,8 +100,8 @@ const Dashboard = () => {
 
     const filtered = initialData.filter((item) => {
       // Pastikan nilai tidak null/undefined sebelum konversi ke string
-      const nomorPi = (item.nomor_pi || '-').toString();
-      const nomorPiUpdate = (item.nomor_pi_update || '-').toString();
+      const nomorPi = (item.nomor_pi || "-").toString();
+      const nomorPiUpdate = (item.nomor_pi_update || "-").toString();
       const searchValue = value.toString();
 
       return (
@@ -206,8 +207,6 @@ const Dashboard = () => {
     />
   );
 
-
-
   return (
     <div className="max-w-screen-xl">
       <div className="grid gap-4">
@@ -265,6 +264,7 @@ const Dashboard = () => {
                   onClick: (e) => handleRowClick(e, record),
                   style: { cursor: "pointer" },
                 })}
+                loading={loading}
               />
             </Flex>
           </div>
@@ -320,12 +320,15 @@ const Dashboard = () => {
                         ]}
                       >
                         <List.Item.Meta
-                          title={item.nomor_pi || '-'}
-                          description={item.nomor_pi_update || '-'}
+                          title={item.nomor_pi || "-"}
+                          description={item.nomor_pi_update || "-"}
                         />
                       </List.Item>
                     )}
-                    locale={{ emptyText: "Keranjang Kosong" }}
+                    locale={{
+                      emptyText: "Pilih part yang akan dijadikan laporan",
+                    }}
+                    loading={loading}
                   />
                 </Card>
 

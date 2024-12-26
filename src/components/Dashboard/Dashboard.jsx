@@ -18,6 +18,8 @@ import {
   FileDoneOutlined,
 } from "@ant-design/icons";
 import "../../app/globals.css";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const { Text } = Typography;
 
@@ -29,25 +31,60 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [isDraftVisible, setIsDraftVisible] = useState(true);
 
+  const [initialData, setInitialData] = useState([]);
+
   // Cart pagination states
   const [currentCartPage, setCurrentCartPage] = useState(1);
   const cartPageSize = 7; // Items per page in cart
 
-  // Generate initial data
-  const initialData = Array.from({ length: 100 }).map((_, i) => ({
-    key: i,
-    name: `Part-${String(i).padStart(4, "0")}`,
-    age: `Updated-${String(i).padStart(4, "0")}`,
-  }));
+  const router = useRouter()
+
+  const fetchPartInduk = async () => {
+    try {
+      const response = await axios.get("api/partinduk");
+      const partindukData = response.data.rows.map((row, index) => ({
+        key: row.id_pi,
+        nomor_pi: row.no_pi,
+        nomor_pi_update: row.no_pi_update,
+      }));
+      setInitialData(partindukData)
+
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  };
+
+  const handleRowClick = async (event, record) => {
+    let paramsData = "";
+    try {
+      const response = await axios.post('api/partinduk', {
+        key: record.key,
+      })
+
+      paramsData = response?.data?.rows[0]?.no_pi
+    } catch (error) {
+      console.error("Error fetching data: ", error)
+    }
+
+    const isCheckbox =
+      event.target.tagName === "INPUT" && event.target.type === "checkbox";
+    const isCheckboxCell = event.target.className.includes(
+      "ant-table-cell-with-append"
+    );
+
+    if (!isCheckbox && !isCheckboxCell) {
+      router.push(`/detail/${paramsData}`);
+    }
+  };
 
   const columns = [
     {
       title: "No Part Induk",
-      dataIndex: "name",
+      dataIndex: "nomor_pi",
     },
     {
       title: "No Part Induk Update",
-      dataIndex: "age",
+      dataIndex: "nomor_pi_update",
     },
   ];
 
@@ -60,11 +97,17 @@ const Dashboard = () => {
       return;
     }
 
-    const filtered = initialData.filter(
-      (item) =>
-        item.name.toLowerCase().includes(value.toLowerCase()) ||
-        item.age.toLowerCase().includes(value.toLowerCase())
-    );
+    const filtered = initialData.filter((item) => {
+      // Pastikan nilai tidak null/undefined sebelum konversi ke string
+      const nomorPi = (item.nomor_pi || '-').toString();
+      const nomorPiUpdate = (item.nomor_pi_update || '-').toString();
+      const searchValue = value.toString();
+
+      return (
+        nomorPi.toLowerCase().includes(searchValue.toLowerCase()) ||
+        nomorPiUpdate.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    });
 
     setFilteredData(filtered);
   };
@@ -72,7 +115,13 @@ const Dashboard = () => {
   // Initialize filtered data
   useEffect(() => {
     setFilteredData(initialData);
-  }, []);
+    fetchPartInduk();
+  }, []); // Effect untuk fetch data awal
+
+  // Tambahkan effect baru untuk update filteredData
+  useEffect(() => {
+    setFilteredData(initialData);
+  }, [initialData]);
 
   const start = () => {
     setLoading(true);
@@ -157,6 +206,8 @@ const Dashboard = () => {
     />
   );
 
+
+
   return (
     <div className="max-w-screen-xl">
       <div className="grid gap-4">
@@ -210,6 +261,10 @@ const Dashboard = () => {
                 }}
                 size="large"
                 bordered={true}
+                onRow={(record) => ({
+                  onClick: (e) => handleRowClick(e, record),
+                  style: { cursor: "pointer" },
+                })}
               />
             </Flex>
           </div>
@@ -265,8 +320,8 @@ const Dashboard = () => {
                         ]}
                       >
                         <List.Item.Meta
-                          title={item.name}
-                          description={item.age}
+                          title={item.nomor_pi || '-'}
+                          description={item.nomor_pi_update || '-'}
                         />
                       </List.Item>
                     )}

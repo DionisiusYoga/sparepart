@@ -197,6 +197,18 @@ const DetailPartInduk = ({ nomor }) => {
     setFilteredData(filtered);
   };
 
+  const handleTambah = async (value1, value2) => {
+    try {
+      const response = await axios.post("/api/draftlaporan/tambah", {
+        no_part: value1,
+        no_part_update: value2,
+      });
+      console.log(response);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  };
+
   // Initialize filtered data
   useEffect(() => {
     setFilteredData(initialData);
@@ -291,7 +303,7 @@ const DetailPartInduk = ({ nomor }) => {
 
           <button
             className="ml-auto px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md"
-            onClick={() => router.back()} // Pastikan router diimpor jika menggunakan Next.js
+            onClick={() => handleTambah(noPart, noPartUpdate)} // Pastikan router diimpor jika menggunakan Next.js
           >
             + Tambahkan ke dalam draft
           </button>
@@ -335,10 +347,6 @@ const DetailPartInduk = ({ nomor }) => {
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 width={600}
-                bodyStyle={{
-                  backgroundColor: "#f5f5f5",
-                  borderRadius: "8px",
-                }}
                 footer={[
                   <Button key="close" onClick={() => setIsModalVisible(false)}>
                     Close

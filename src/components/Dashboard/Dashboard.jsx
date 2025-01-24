@@ -41,7 +41,7 @@ const Dashboard = () => {
 
   const fetchPartInduk = async () => {
     try {
-      const response = await axios.get("api/partinduk");
+      const response = await axios.get("/api/partinduk");
       const partindukData = response.data.rows.map((row, index) => ({
         key: row.id_pi,
         nomor_pi: row.no_part,
@@ -54,6 +54,20 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+  const fetchDraftLaporan = async () => {
+    try {
+      const response = await axios.get("/api/draftlaporan");
+      setCartItems(response.data.rows);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchDraftLaporan();
+  }, []);
 
   const handleRowClick = async (event, record) => {
     let paramsData = "";
@@ -124,37 +138,43 @@ const Dashboard = () => {
     setFilteredData(initialData);
   }, [initialData]);
 
-  const start = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setSelectedRowKeys([]);
-      setLoading(false);
-    }, 1000);
-  };
-
   // Handle row selection with improved uncheck handling
-  const onSelectChange = (newSelectedRowKeys, selectedRows) => {
-    const uncheckedKeys = selectedRowKeys.filter(
-      (key) => !newSelectedRowKeys.includes(key)
-    );
+  // const onSelectChange = (newSelectedRowKeys, selectedRows) => {
+  //   const uncheckedKeys = selectedRowKeys.filter(
+  //     (key) => !newSelectedRowKeys.includes(key)
+  //   );
 
-    setSelectedRowKeys(newSelectedRowKeys);
+  //   setSelectedRowKeys(newSelectedRowKeys);
 
-    if (uncheckedKeys.length > 0) {
-      setCartItems((prevCartItems) =>
-        prevCartItems.filter((item) => !uncheckedKeys.includes(item.key))
-      );
-    }
+  //   if (uncheckedKeys.length > 0) {
+  //     setCartItems((prevCartItems) =>
+  //       prevCartItems.filter((item) => !uncheckedKeys.includes(item.key))
+  //     );
+  //   }
 
-    const newItems = selectedRows.filter(
-      (row) => !cartItems.some((cartItem) => cartItem.key === row.key)
-    );
+  //   const newItems = selectedRows.filter(
+  //     (row) => !cartItems.some((cartItem) => cartItem.key === row.key)
+  //   );
 
-    if (newItems.length > 0) {
-      setCartItems((prevCartItems) => [...prevCartItems, ...newItems]);
-      // Reset to first page when new items are added
-      setCurrentCartPage(1);
-    }
+  //   if (newItems.length > 0) {
+  //     setCartItems((prevCartItems) => [...prevCartItems, ...newItems]);
+  //     // Reset to first page when new items are added
+  //     setCurrentCartPage(1);
+  //   }
+  // };
+
+  const toggleItemSelection = (item) => {
+    setSelectedItems((prevSelectedItems) => {
+      const updatedSelectedItems = new Set(prevSelectedItems);
+
+      if (updatedSelectedItems.has(item.key)) {
+        updatedSelectedItems.delete(item.key); // Hapus item jika sudah dipilih
+      } else {
+        updatedSelectedItems.add(item.key); // Tambah item jika belum dipilih
+      }
+
+      return updatedSelectedItems;
+    });
   };
 
   // Remove item from cart
@@ -186,11 +206,11 @@ const Dashboard = () => {
     setCurrentCartPage(page);
   };
 
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: onSelectChange,
-    preserveSelectedRowKeys: true,
-  };
+  // const rowSelection = {
+  //   selectedRowKeys,
+  //   onChange: onSelectChange,
+  //   preserveSelectedRowKeys: true,
+  // };
 
   const toggleDraftVisibility = () => {
     setIsDraftVisible(!isDraftVisible);
@@ -251,7 +271,7 @@ const Dashboard = () => {
               </Flex> */}
 
               <Table
-                rowSelection={rowSelection}
+                // rowSelection={rowSelection}
                 columns={columns}
                 dataSource={filteredData}
                 pagination={{
@@ -320,8 +340,34 @@ const Dashboard = () => {
                         ]}
                       >
                         <List.Item.Meta
-                          title={item.nomor_pi || "-"}
-                          description={item.nomor_pi_update || "-"}
+                          title={
+                            item.no_part ? (
+                              <div className="grid">
+                                <div>No Part</div>
+                                <div className="font-bold">{item.no_part}</div>
+                              </div>
+                            ) : (
+                              <div className="grid">
+                                <div>No Part Update</div>
+                                <div className="font-bold">-</div>
+                              </div>
+                            )
+                          }
+                          description={
+                            item.no_part_update ? (
+                              <div className="grid">
+                                <div>No Part Update</div>
+                                <div className="font-bold">
+                                  {item.no_part_update}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="grid">
+                                <div>No Part Update</div>
+                                <div className="font-bold">-</div>
+                              </div>
+                            )
+                          }
                         />
                       </List.Item>
                     )}

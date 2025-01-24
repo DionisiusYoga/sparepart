@@ -44,8 +44,8 @@ const Dashboard = () => {
       const response = await axios.get("api/partinduk");
       const partindukData = response.data.rows.map((row, index) => ({
         key: row.id_pi,
-        nomor_pi: row.no_pi,
-        nomor_pi_update: row.no_pi_update,
+        nomor_pi: row.no_part,
+        nomor_pi_update: row.no_part_update,
       }));
       setInitialData(partindukData);
     } catch (error) {
@@ -62,7 +62,7 @@ const Dashboard = () => {
         key: record.key,
       });
 
-      paramsData = response?.data?.rows[0]?.no_pi;
+      paramsData = response?.data?.rows[0]?.no_part;
     } catch (error) {
       console.error("Error fetching data: ", error);
     }

@@ -41,13 +41,15 @@ const DetailPartInduk = ({ nomor }) => {
 
   const fetchPartInduk = async () => {
     try {
-      const response = await axios.get("api/partinduk");
-      const partindukData = response.data.rows.map((row, index) => ({
-        key: row.id_pi,
-        nomor_pi: row.no_pi,
-        nomor_pi_update: row.no_pi_update,
+      const response = await axios.get("api/partanak");
+      const partAnakData = response?.data?.rows?.map((row, index) => ({
+        key: row.id_pa,
+        nomor_pa: row.no_part,
+        nomor_pa_update: row.no_part_update,
+        supplier: id_dwg,
+        maker: id_maker,
       }));
-      setInitialData(partindukData);
+      setInitialData(partAnakData);
     } catch (error) {
       console.error("Error fetching data: ", error);
     } finally {

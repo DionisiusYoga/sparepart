@@ -288,6 +288,13 @@ const DetailPartInduk = ({ nomor }) => {
               {noPartUpdate || "-"}
             </div>
           </div>
+
+          <button
+            className="ml-auto px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md"
+            onClick={() => router.back()} // Pastikan router diimpor jika menggunakan Next.js
+          >
+            + Tambahkan ke dalam draft
+          </button>
         </div>
 
         <Flex gap="large">

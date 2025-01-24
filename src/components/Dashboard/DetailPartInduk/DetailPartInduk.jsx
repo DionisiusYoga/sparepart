@@ -10,6 +10,8 @@ import {
   Typography,
   Badge,
   Pagination,
+  Descriptions,
+  Modal,
 } from "antd";
 import {
   SearchOutlined,
@@ -25,11 +27,16 @@ const { Text } = Typography;
 
 const DetailPartInduk = ({ nomor }) => {
   const [searchText, setSearchText] = useState("");
+  const [partId, setPartId] = useState("");
+  const [noPart, setNoPart] = useState("");
+  const [noPartUpdate, setNoPartUpdate] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDraftVisible, setIsDraftVisible] = useState(true);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const [initialData, setInitialData] = useState([]);
 
@@ -41,15 +48,18 @@ const DetailPartInduk = ({ nomor }) => {
 
   const fetchPartInduk = async () => {
     try {
-      const response = await axios.get("api/partanak");
-      const partAnakData = response?.data?.rows?.map((row, index) => ({
-        key: row.id_pa,
-        nomor_pa: row.no_part,
-        nomor_pa_update: row.no_part_update,
-        supplier: id_dwg,
-        maker: id_maker,
-      }));
-      setInitialData(partAnakData);
+      const response = await axios.post("/api/partinduk/cek", {
+        no_part_induk: nomor,
+      });
+
+      const dataLength = response?.data?.rows?.length;
+      setPartId(response?.data?.rows[0]?.id_pi);
+      setNoPart(response?.data?.rows[0]?.no_part);
+      setNoPartUpdate(response?.data?.rows[0]?.no_part_update);
+
+      if (dataLength === 0) {
+        router.push("/");
+      }
     } catch (error) {
       console.error("Error fetching data: ", error);
     } finally {
@@ -57,27 +67,47 @@ const DetailPartInduk = ({ nomor }) => {
     }
   };
 
-  const handleRowClick = async (event, record) => {
-    let paramsData = "";
+  const fetchPartAnak = async () => {
+    console.log(partId);
     try {
-      const response = await axios.post("api/partinduk", {
-        key: record.key,
+      const response = await axios.post("/api/partanak", {
+        id_pi: partId,
       });
 
-      paramsData = response?.data?.rows[0]?.no_pi;
+      const partAnakData = response?.data?.rows?.map((row) => ({
+        key: row.id_pa,
+        nomor_pa: row.no_part || "-",
+        nomor_pa_update: row.no_part_update || "-",
+        supplier: row.nama_lokal || "-",
+        maker: row.nama_maker || "-",
+        remark: row.nama || "",
+        no_cmw: row.no_cmw,
+        dwg: row.nama_dwg,
+        material: row.nama_material,
+      }));
+      setInitialData(partAnakData || []);
     } catch (error) {
       console.error("Error fetching data: ", error);
+      setInitialData([]); // Ensure array even on error
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const isCheckbox =
-      event.target.tagName === "INPUT" && event.target.type === "checkbox";
-    const isCheckboxCell = event.target.className.includes(
-      "ant-table-cell-with-append"
-    );
+  useEffect(() => {
+    fetchPartInduk();
+  }, [nomor]); // Add dependency to prevent infinite loop
 
-    if (!isCheckbox && !isCheckboxCell) {
-      router.push(`/detail/${paramsData}`);
+  useEffect(() => {
+    if (partId) {
+      fetchPartAnak();
     }
+  }, [partId]); // Only run when partId changes
+
+  const handleRowClick = (record) => {
+    console.log("Selected Record:", record);
+    setSelectedRow(record);
+    setIsModalVisible(true);
   };
 
   const columns = [
@@ -108,6 +138,41 @@ const DetailPartInduk = ({ nomor }) => {
     },
   ];
 
+  // const columns = [
+  //   {
+  //     title: "No Part Anak",
+  //     dataIndex: "nomor_pa",
+  //   },
+  //   {
+  //     title: "No Part Anak Update",
+  //     dataIndex: "nomor_pa_update",
+  //   },
+  //   {
+  //     title: "No CMW",
+  //     dataIndex: "no_cmw",
+  //   },
+  //   {
+  //     title: "Supplier",
+  //     dataIndex: "supplier",
+  //   },
+  //   {
+  //     title: "Maker",
+  //     dataIndex: "maker",
+  //   },
+  //   {
+  //     title: "Drawing",
+  //     dataIndex: "dwg",
+  //   },
+  //   {
+  //     title: "Material",
+  //     dataIndex: "material",
+  //   },
+  //   {
+  //     title: "Remark",
+  //     dataIndex: "remark",
+  //   },
+  // ];
+
   // Handle search functionality
   const handleSearch = (value) => {
     setSearchText(value);
@@ -119,8 +184,8 @@ const DetailPartInduk = ({ nomor }) => {
 
     const filtered = initialData.filter((item) => {
       // Pastikan nilai tidak null/undefined sebelum konversi ke string
-      const nomorPi = (item.nomor_pi || "-").toString();
-      const nomorPiUpdate = (item.nomor_pi_update || "-").toString();
+      const nomorPi = (item.nomor_pa || "-").toString();
+      const nomorPiUpdate = (item.nomor_pa_update || "-").toString();
       const searchValue = value.toString();
 
       return (
@@ -135,7 +200,6 @@ const DetailPartInduk = ({ nomor }) => {
   // Initialize filtered data
   useEffect(() => {
     setFilteredData(initialData);
-    fetchPartInduk();
   }, []); // Effect untuk fetch data awal
 
   // Tambahkan effect baru untuk update filteredData
@@ -176,47 +240,6 @@ const DetailPartInduk = ({ nomor }) => {
     }
   };
 
-  // Remove item from cart
-  const removeFromCart = (itemKey) => {
-    setCartItems(cartItems.filter((item) => item.key !== itemKey));
-    setSelectedRowKeys(selectedRowKeys.filter((key) => key !== itemKey));
-
-    // Adjust current page if necessary after removal
-    const totalPages = Math.ceil((cartItems.length - 1) / cartPageSize);
-    if (currentCartPage > totalPages && totalPages > 0) {
-      setCurrentCartPage(totalPages);
-    }
-  };
-
-  // Clear entire cart
-  const clearCart = () => {
-    setCartItems([]);
-    setSelectedRowKeys([]);
-    setCurrentCartPage(1);
-  };
-
-  // Calculate paginated cart items
-  const getPaginatedCartItems = () => {
-    const startIndex = (currentCartPage - 1) * cartPageSize;
-    return cartItems.slice(startIndex, startIndex + cartPageSize);
-  };
-
-  const onCartPageChange = (page) => {
-    setCurrentCartPage(page);
-  };
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: onSelectChange,
-    preserveSelectedRowKeys: true,
-  };
-
-  const toggleDraftVisibility = () => {
-    setIsDraftVisible(!isDraftVisible);
-  };
-
-  const hasSelected = selectedRowKeys.length > 0;
-
   const suffix = (
     <SearchOutlined
       style={{
@@ -229,45 +252,41 @@ const DetailPartInduk = ({ nomor }) => {
   return (
     <div className="max-w-screen-xl">
       <div className="grid gap-4">
+        <div className="flex items-center justify-between">
+          <div className="text-2xl font-medium">
+            <p>Informasi Part Induk</p>
+          </div>
+          <button
+            className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md"
+            onClick={() => router.back()} // Pastikan router diimpor jika menggunakan Next.js
+          >
+            Kembali
+          </button>
+        </div>
+
         <div>
           <Input
-            placeholder="Cari Nomor Part Anak"
+            placeholder="Cari no part anak"
             size="large"
             value={searchText}
             onChange={(e) => handleSearch(e.target.value)}
             suffix={suffix}
+            // className="shadow-md"
           />
         </div>
-        <Flex justify="space-between" align="center">
-          <div className="text-2xl font-medium">
-            <p>Informasi Part Induk</p>
-          </div>
-        </Flex>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              width: "310px",
-            }}
-          >
-            <span>Nomor Part Induk</span>
-            <span>
-              : <span style={{ fontWeight: "bold" }}>{nomor}</span>
-            </span>
+        <div className="flex gap-8 mb-2 p-4 bg-white rounded-md border border-gray-200">
+          <div className="grid">
+            <div className="text-sm text-gray-500">Nomor Part Induk</div>
+            <div className="font-bold text-lg text-gray-800">
+              {noPart || "-"}
+            </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              width: "310px",
-            }}
-          >
-            <span>Nomor Part Induk Update</span>
-            <span className="">
-              : <span style={{ fontWeight: "bold" }}>{nomor}</span>
-            </span>
+          <div className="grid">
+            <div className="text-sm text-gray-500">Nomor Part Induk Update</div>
+            <div className="font-bold text-lg text-gray-800">
+              {noPartUpdate || "-"}
+            </div>
           </div>
         </div>
 
@@ -288,7 +307,6 @@ const DetailPartInduk = ({ nomor }) => {
                   ? `Selected ${selectedRowKeys.length} items`
                   : null}
               </Flex> */}
-
               <Table
                 // rowSelection={rowSelection}
                 columns={columns}
@@ -300,11 +318,65 @@ const DetailPartInduk = ({ nomor }) => {
                 size="large"
                 bordered={true}
                 onRow={(record) => ({
-                  onClick: (e) => handleRowClick(e, record),
+                  onClick: (e) => handleRowClick(record),
                   style: { cursor: "pointer" },
                 })}
                 loading={loading}
               />
+              <Modal
+                title="Detail Part Anak"
+                open={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                width={600}
+                bodyStyle={{
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: "8px",
+                }}
+                footer={[
+                  <Button key="close" onClick={() => setIsModalVisible(false)}>
+                    Close
+                  </Button>,
+                ]}
+              >
+                {selectedRow && (
+                  <Descriptions
+                    layout="vertical"
+                    bordered
+                    column={{ xs: 1, sm: 2, md: 2 }}
+                    style={{
+                      marginTop: "20px",
+                      backgroundColor: "white",
+                      padding: "20px",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <Descriptions.Item label="No Part Anak" span={2}>
+                      <strong>{selectedRow.nomor_pa || "-"}</strong>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="No Part Anak Update" span={2}>
+                      <strong>{selectedRow.nomor_pa_update || "-"}</strong>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="No CMW" span={3}>
+                      {selectedRow.no_cmw || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Supplier" span={1}>
+                      {selectedRow.supplier || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Maker" span={1}>
+                      {selectedRow.maker || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Drawing" span={1}>
+                      {selectedRow.dwg || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Material" span={2}>
+                      {selectedRow.material || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Remark" span={2}>
+                      {selectedRow.remark || "-"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                )}
+              </Modal>
             </Flex>
           </div>
         </Flex>

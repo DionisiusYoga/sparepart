@@ -34,9 +34,11 @@ const DetailPartInduk = ({ nomor }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingButton, setLoadingButton] = useState(true);
   const [isDraftVisible, setIsDraftVisible] = useState(true);
   const [selectedRow, setSelectedRow] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [statusButton, setStatusButton] = useState(false);
 
   const [initialData, setInitialData] = useState([]);
 
@@ -68,11 +70,23 @@ const DetailPartInduk = ({ nomor }) => {
   };
 
   const fetchPartAnak = async () => {
-    console.log(partId);
     try {
       const response = await axios.post("/api/partanak", {
         id_pi: partId,
       });
+
+      const response2 = await axios.post("/api/partanak/cekdraft", {
+        id_pi: partId,
+      });
+
+      setTimeout(() => {
+        setLoadingButton(false);
+        if (response2.data.rows[0].jumlah == 1) {
+          setStatusButton(true);
+        } else {
+          setStatusButton(false);
+        }
+      }, 1000);
 
       const partAnakData = response?.data?.rows?.map((row) => ({
         key: row.id_pa,
@@ -105,7 +119,7 @@ const DetailPartInduk = ({ nomor }) => {
   }, [partId]); // Only run when partId changes
 
   const handleRowClick = (record) => {
-    console.log("Selected Record:", record);
+    // console.log("Selected Record:", record);
     setSelectedRow(record);
     setIsModalVisible(true);
   };
@@ -203,7 +217,35 @@ const DetailPartInduk = ({ nomor }) => {
         no_part: value1,
         no_part_update: value2,
       });
-      console.log(response);
+      if (response.status == 200) {
+        setLoadingButton(true); // Set loading to true
+        setTimeout(() => {
+          setLoadingButton(false);
+          setStatusButton(true);
+        }, 800);
+      } else {
+        setStatusButton(false);
+      }
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  };
+
+  const handleHapus = async (value) => {
+    try {
+      const response = await axios.post("/api/partanak/hapusdraft", {
+        no_part: value,
+      });
+
+      if (response.status == 200) {
+        setLoadingButton(true); // Set loading to true
+        setTimeout(() => {
+          setLoadingButton(false);
+          setStatusButton(false);
+        }, 800);
+      } else {
+        setStatusButton(true);
+      }
     } catch (error) {
       console.error("Error fetching data: ", error);
     }
@@ -287,7 +329,7 @@ const DetailPartInduk = ({ nomor }) => {
           />
         </div>
 
-        <div className="flex gap-8 mb-2 p-4 bg-white rounded-md border border-gray-200">
+        <div className="flex gap-8 mb-2 p-4 bg-white rounded-md border border-gray-200 items-center">
           <div className="grid">
             <div className="text-sm text-gray-500">Nomor Part Induk</div>
             <div className="font-bold text-lg text-gray-800">
@@ -301,12 +343,29 @@ const DetailPartInduk = ({ nomor }) => {
             </div>
           </div>
 
-          <button
-            className="ml-auto px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md"
-            onClick={() => handleTambah(noPart, noPartUpdate)} // Pastikan router diimpor jika menggunakan Next.js
-          >
-            + Tambahkan ke dalam draft
-          </button>
+          {loadingButton ? (
+            <Button
+              loading
+              className="ml-auto px-4 py-2 min-h-[42px] text-white bg-gray-200 hover:bg-gray-200 rounded-md shadow-md flex items-center"
+              disabled // Nonaktifkan tombol saat loading
+            >
+              Loading...
+            </Button>
+          ) : statusButton ? (
+            <Button
+              className="ml-auto px-4 py-2 min-h-[42px] text-white bg-red-600 hover:bg-red-700 rounded-md shadow-md flex items-center"
+              onClick={() => handleHapus(noPart)} // Pastikan router diimpor jika menggunakan Next.js
+            >
+              - Hapus dari draft
+            </Button>
+          ) : (
+            <Button
+              className="ml-auto px-4 py-2 min-h-[42px] text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md flex items-center"
+              onClick={() => handleTambah(noPart, noPartUpdate)} // Pastikan router diimpor jika menggunakan Next.js
+            >
+              + Tambahkan ke dalam draft
+            </Button>
+          )}
         </div>
 
         <Flex gap="large">
@@ -371,7 +430,7 @@ const DetailPartInduk = ({ nomor }) => {
                     <Descriptions.Item label="No Part Anak Update" span={2}>
                       <strong>{selectedRow.nomor_pa_update || "-"}</strong>
                     </Descriptions.Item>
-                    <Descriptions.Item label="No CMW" span={3}>
+                    <Descriptions.Item label="No CMW" span={2}>
                       {selectedRow.no_cmw || "-"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Supplier" span={1}>
@@ -380,7 +439,7 @@ const DetailPartInduk = ({ nomor }) => {
                     <Descriptions.Item label="Maker" span={1}>
                       {selectedRow.maker || "-"}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Drawing" span={1}>
+                    <Descriptions.Item label="Drawing" span={2}>
                       {selectedRow.dwg || "-"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Material" span={2}>

@@ -35,7 +35,7 @@ const Dashboard = () => {
 
   // Cart pagination states
   const [currentCartPage, setCurrentCartPage] = useState(1);
-  const cartPageSize = 7; // Items per page in cart
+  const cartPageSize = 4; // Items per page in cart
 
   const router = useRouter();
 
@@ -72,7 +72,7 @@ const Dashboard = () => {
   const handleRowClick = async (event, record) => {
     let paramsData = "";
     try {
-      const response = await axios.post("api/partinduk", {
+      const response = await axios.post("/api/partinduk", {
         key: record.key,
       });
 
@@ -103,7 +103,6 @@ const Dashboard = () => {
     },
   ];
 
-  // Handle search functionality
   const handleSearch = (value) => {
     setSearchText(value);
 
@@ -113,7 +112,6 @@ const Dashboard = () => {
     }
 
     const filtered = initialData.filter((item) => {
-      // Pastikan nilai tidak null/undefined sebelum konversi ke string
       const nomorPi = (item.nomor_pi || "-").toString();
       const nomorPiUpdate = (item.nomor_pi_update || "-").toString();
       const searchValue = value.toString();
@@ -127,72 +125,51 @@ const Dashboard = () => {
     setFilteredData(filtered);
   };
 
-  // Initialize filtered data
   useEffect(() => {
     setFilteredData(initialData);
     fetchPartInduk();
   }, []); // Effect untuk fetch data awal
 
-  // Tambahkan effect baru untuk update filteredData
   useEffect(() => {
     setFilteredData(initialData);
   }, [initialData]);
 
-  // Handle row selection with improved uncheck handling
-  // const onSelectChange = (newSelectedRowKeys, selectedRows) => {
-  //   const uncheckedKeys = selectedRowKeys.filter(
-  //     (key) => !newSelectedRowKeys.includes(key)
-  //   );
+  const removeFromCart = async (itemKey) => {
+    try {
+      const response = await axios.post("/api/draftlaporan/hapus", {
+        id_draft: itemKey,
+      });
 
-  //   setSelectedRowKeys(newSelectedRowKeys);
-
-  //   if (uncheckedKeys.length > 0) {
-  //     setCartItems((prevCartItems) =>
-  //       prevCartItems.filter((item) => !uncheckedKeys.includes(item.key))
-  //     );
-  //   }
-
-  //   const newItems = selectedRows.filter(
-  //     (row) => !cartItems.some((cartItem) => cartItem.key === row.key)
-  //   );
-
-  //   if (newItems.length > 0) {
-  //     setCartItems((prevCartItems) => [...prevCartItems, ...newItems]);
-  //     // Reset to first page when new items are added
-  //     setCurrentCartPage(1);
-  //   }
-  // };
-
-  const toggleItemSelection = (item) => {
-    setSelectedItems((prevSelectedItems) => {
-      const updatedSelectedItems = new Set(prevSelectedItems);
-
-      if (updatedSelectedItems.has(item.key)) {
-        updatedSelectedItems.delete(item.key); // Hapus item jika sudah dipilih
-      } else {
-        updatedSelectedItems.add(item.key); // Tambah item jika belum dipilih
+      if (response.status == 200) {
+        fetchDraftLaporan();
       }
 
-      return updatedSelectedItems;
-    });
-  };
-
-  // Remove item from cart
-  const removeFromCart = (itemKey) => {
-    setCartItems(cartItems.filter((item) => item.key !== itemKey));
-    setSelectedRowKeys(selectedRowKeys.filter((key) => key !== itemKey));
-
-    // Adjust current page if necessary after removal
-    const totalPages = Math.ceil((cartItems.length - 1) / cartPageSize);
-    if (currentCartPage > totalPages && totalPages > 0) {
-      setCurrentCartPage(totalPages);
+      const totalPages = Math.ceil((cartItems.length - 1) / cartPageSize);
+      if (currentCartPage > totalPages && totalPages > 0) {
+        setCurrentCartPage(totalPages);
+      }
+    } catch (error) {
+      console.error("Error fetching data: ", error);
     }
   };
 
-  // Clear entire cart
-  const clearCart = () => {
-    setCartItems([]);
-    setSelectedRowKeys([]);
+  const clearCart = async () => {
+    try {
+      const response = await axios.post("/api/draftlaporan/hapus", {
+        id_draft: "clear",
+      });
+
+      if (response.status == 200) {
+        fetchDraftLaporan();
+      }
+
+      const totalPages = Math.ceil((cartItems.length - 1) / cartPageSize);
+      if (currentCartPage > totalPages && totalPages > 0) {
+        setCurrentCartPage(totalPages);
+      }
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
     setCurrentCartPage(1);
   };
 
@@ -206,17 +183,9 @@ const Dashboard = () => {
     setCurrentCartPage(page);
   };
 
-  // const rowSelection = {
-  //   selectedRowKeys,
-  //   onChange: onSelectChange,
-  //   preserveSelectedRowKeys: true,
-  // };
-
   const toggleDraftVisibility = () => {
     setIsDraftVisible(!isDraftVisible);
   };
-
-  const hasSelected = selectedRowKeys.length > 0;
 
   const suffix = (
     <SearchOutlined
@@ -313,10 +282,13 @@ const Dashboard = () => {
                       }}
                     >
                       <Text>Draft Laporan ({cartItems.length})</Text>
+
                       {cartItems.length > 0 && (
-                        <Button type="text" danger onClick={clearCart}>
-                          Clear All
-                        </Button>
+                        <div>
+                          <Button type="text" danger onClick={clearCart}>
+                            Clear All
+                          </Button>
+                        </div>
                       )}
                     </div>
                   }
@@ -335,7 +307,7 @@ const Dashboard = () => {
                             type="text"
                             danger
                             icon={<DeleteOutlined />}
-                            onClick={() => removeFromCart(item.key)}
+                            onClick={() => removeFromCart(item.id_draft)}
                           />,
                         ]}
                       >
@@ -376,6 +348,9 @@ const Dashboard = () => {
                     }}
                     loading={loading}
                   />
+                  <Button className="w-full mt-2 bg-blue-500 text-white">
+                    Export laporan
+                  </Button>
                 </Card>
 
                 {/* Pagination Selalu di Bawah */}

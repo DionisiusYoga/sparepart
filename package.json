@@ -12,12 +12,15 @@
     "antd": "^5.22.5",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
+    "exceljs": "^4.4.0",
     "lucide-react": "^0.468.0",
     "next": "^14.2.5",
     "next-auth": "^4.24.11",
     "pg": "^8.13.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-spreadsheet": "^0.9.5",
+    "scheduler": "^0.25.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

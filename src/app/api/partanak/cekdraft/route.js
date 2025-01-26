@@ -11,8 +11,6 @@ export async function POST(req) {
             COUNT(id_pi) as jumlah
         FROM 
             draft
-        JOIN 
-            part_induk pi ON pi.no_part = draft.no_part
         WHERE 
             id_pi = $1
       `;

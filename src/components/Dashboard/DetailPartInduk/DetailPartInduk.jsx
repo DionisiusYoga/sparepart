@@ -92,9 +92,13 @@ const DetailPartInduk = ({ nomor }) => {
         key: row.id_pa,
         nomor_pa: row.no_part || "-",
         nomor_pa_update: row.no_part_update || "-",
-        supplier: row.nama_lokal || "-",
+        supplier: row.nama_lokal
+          ? row.nama_lokal
+          : " " || row.nama_impor
+          ? row.nama_impor
+          : " ",
         maker: row.nama_maker || "-",
-        remark: row.nama || "",
+        part_name: row.nama || "",
         no_cmw: row.no_cmw,
         dwg: row.nama_dwg,
         material: row.nama_material,
@@ -139,6 +143,10 @@ const DetailPartInduk = ({ nomor }) => {
       dataIndex: "nomor_pa_update",
     },
     {
+      title: "Part Name",
+      dataIndex: "part_name",
+    },
+    {
       title: "Supplier",
       dataIndex: "supplier",
     },
@@ -146,48 +154,8 @@ const DetailPartInduk = ({ nomor }) => {
       title: "Maker",
       dataIndex: "maker",
     },
-    {
-      title: "Remark",
-      dataIndex: "remark",
-    },
   ];
 
-  // const columns = [
-  //   {
-  //     title: "No Part Anak",
-  //     dataIndex: "nomor_pa",
-  //   },
-  //   {
-  //     title: "No Part Anak Update",
-  //     dataIndex: "nomor_pa_update",
-  //   },
-  //   {
-  //     title: "No CMW",
-  //     dataIndex: "no_cmw",
-  //   },
-  //   {
-  //     title: "Supplier",
-  //     dataIndex: "supplier",
-  //   },
-  //   {
-  //     title: "Maker",
-  //     dataIndex: "maker",
-  //   },
-  //   {
-  //     title: "Drawing",
-  //     dataIndex: "dwg",
-  //   },
-  //   {
-  //     title: "Material",
-  //     dataIndex: "material",
-  //   },
-  //   {
-  //     title: "Remark",
-  //     dataIndex: "remark",
-  //   },
-  // ];
-
-  // Handle search functionality
   const handleSearch = (value) => {
     setSearchText(value);
 
@@ -211,9 +179,10 @@ const DetailPartInduk = ({ nomor }) => {
     setFilteredData(filtered);
   };
 
-  const handleTambah = async (value1, value2) => {
+  const handleTambah = async (id_pi, value1, value2) => {
     try {
       const response = await axios.post("/api/draftlaporan/tambah", {
+        id_pi: id_pi,
         no_part: value1,
         no_part_update: value2,
       });
@@ -361,7 +330,7 @@ const DetailPartInduk = ({ nomor }) => {
           ) : (
             <Button
               className="ml-auto px-4 py-2 min-h-[42px] text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md flex items-center"
-              onClick={() => handleTambah(noPart, noPartUpdate)} // Pastikan router diimpor jika menggunakan Next.js
+              onClick={() => handleTambah(partId, noPart, noPartUpdate)} // Pastikan router diimpor jika menggunakan Next.js
             >
               + Tambahkan ke dalam draft
             </Button>
@@ -424,29 +393,29 @@ const DetailPartInduk = ({ nomor }) => {
                       borderRadius: "8px",
                     }}
                   >
-                    <Descriptions.Item label="No Part Anak" span={2}>
+                    <Descriptions.Item label="No Part Anak" span={3}>
                       <strong>{selectedRow.nomor_pa || "-"}</strong>
                     </Descriptions.Item>
-                    <Descriptions.Item label="No Part Anak Update" span={2}>
+                    <Descriptions.Item label="No Part Anak Update" span={3}>
                       <strong>{selectedRow.nomor_pa_update || "-"}</strong>
                     </Descriptions.Item>
-                    <Descriptions.Item label="No CMW" span={2}>
+                    <Descriptions.Item label="Part Name" span={3}>
+                      {selectedRow.part_name || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="No CMW" span={3}>
                       {selectedRow.no_cmw || "-"}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Supplier" span={1}>
-                      {selectedRow.supplier || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Maker" span={1}>
-                      {selectedRow.maker || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Drawing" span={2}>
+                    <Descriptions.Item label="DWG Supplier" span={3}>
                       {selectedRow.dwg || "-"}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Material" span={2}>
-                      {selectedRow.material || "-"}
+                    <Descriptions.Item label="Maker" span={3}>
+                      {selectedRow.maker || "-"}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Remark" span={2}>
-                      {selectedRow.remark || "-"}
+                    <Descriptions.Item label="Supplier" span={3}>
+                      {selectedRow.supplier || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Material" span={3}>
+                      {selectedRow.material || "-"}
                     </Descriptions.Item>
                   </Descriptions>
                 )}

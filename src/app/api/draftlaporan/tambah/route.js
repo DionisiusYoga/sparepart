@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   const request = await req.json();
+  const id_pi = request.id_pi;
   const no_part = request.no_part;
   const no_part_update = request.no_part_update;
 
@@ -17,10 +18,10 @@ export async function POST(req) {
       return NextResponse.json({ error: "Data sudah ada di database" });
     } else {
       let insertQuery = `
-          INSERT INTO draft(no_part, no_part_update)
-          VALUES ($1, $2);
+          INSERT INTO draft(id_pi, no_part, no_part_update)
+          VALUES ($1, $2, $3);
         `;
-      let insertValue = [no_part, no_part_update];
+      let insertValue = [id_pi, no_part, no_part_update];
       let data = await handlerQuery(insertQuery, insertValue);
       return NextResponse.json(data);
     }

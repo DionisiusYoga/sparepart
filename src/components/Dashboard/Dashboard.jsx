@@ -199,10 +199,22 @@ const Dashboard = () => {
     });
 
     // Add draft data
+    const usedNoPartInduk = new Set();
+
     dataDraft.forEach((draft) => {
+      // Check if no_part_induk has already been used
+      const noPartInduk = usedNoPartInduk.has(draft.no_part_induk)
+        ? " "
+        : draft.no_part_induk || "-";
+
+      // If no_part_induk is not "-", add it to the set
+      if (noPartInduk !== "-") {
+        usedNoPartInduk.add(noPartInduk);
+      }
+
       worksheet.addRow([
-        "-",
-        draft.no_part_induk || "-",
+        "",
+        noPartInduk,
         draft.no_part_induk_update || "-",
         draft.no_part || "-",
         draft.no_part_update || "-",
@@ -214,7 +226,7 @@ const Dashboard = () => {
         draft.nama_lokal || "-",
         draft.no_cmw || "-",
         draft.nama_maker || "-",
-        "-",
+        "",
       ]);
     });
 
@@ -591,12 +603,15 @@ const Dashboard = () => {
                     }}
                     loading={loading}
                   />
-                  <Button
-                    className="w-full mt-2 bg-blue-500 text-white"
-                    onClick={() => setVisible(true)}
-                  >
-                    Generate excel
-                  </Button>
+
+                  {cartItems.length > 0 && (
+                    <Button
+                      className="w-full mt-2 bg-blue-500 text-white"
+                      onClick={() => setVisible(true)}
+                    >
+                      Generate excel
+                    </Button>
+                  )}
                   <Modal
                     title={
                       <div className="text-center text-xl font-semibold text-gray-700">

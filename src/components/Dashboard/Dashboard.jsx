@@ -42,24 +42,18 @@ const Dashboard = () => {
   const [date, setDate] = useState("");
 
   const [dataDraft, setDataDraft] = useState([]);
+  const [initialData, setInitialData] = useState([]);
+  const [currentCartPage, setCurrentCartPage] = useState(1);
+  const cartPageSize = 4;
+
+  const router = useRouter();
 
   const handleCancel = () => {
     setVisible(false);
   };
-
   const handleOk = () => {
-    // Here you can generate the Excel report using the input values
-
     setVisible(false);
   };
-
-  const [initialData, setInitialData] = useState([]);
-
-  // Cart pagination states
-  const [currentCartPage, setCurrentCartPage] = useState(1);
-  const cartPageSize = 4; // Items per page in cart
-
-  const router = useRouter();
 
   const jsonData = [
     {
@@ -71,7 +65,6 @@ const Dashboard = () => {
     },
   ];
 
-  // Ubah data JSON ke format yang dapat digunakan oleh react-spreadsheet
   const headers = [
     "PART NO.",
     "PART NAME",
@@ -80,10 +73,9 @@ const Dashboard = () => {
     "REVISI / DATE",
   ];
 
-  // Mengubah data menjadi format yang diinginkan: setiap field menjadi baris dengan value di sampingnya
   const spreadsheetData = headers.map((header) => [
-    { value: header }, // Field name
-    { value: jsonData[0][header] || "" }, // Field value
+    { value: header },
+    { value: jsonData[0][header] || "" },
   ]);
 
   const [data, setData] = useState(spreadsheetData);
@@ -92,20 +84,19 @@ const Dashboard = () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Report");
 
-    worksheet.addRow([]); // Add an empty row for spacing
+    worksheet.addRow([]);
 
     worksheet.columns = [
-      { header: "Field", key: "field", width: 25 }, // Kolom A (Field Name)
-      { header: "Value", key: "value", width: 40 }, // Kolom B (Value)
+      { header: "Field", key: "field", width: 25 },
+      { header: "Value", key: "value", width: 40 },
     ];
 
-    // Menambahkan data ke worksheet
     spreadsheetData.forEach((row, rowIndex) => {
-      worksheet.getCell(`A${rowIndex + 1}`).value = row[0].value; // Field name in column A
-      worksheet.getCell(`B${rowIndex + 1}`).value = row[1].value; // Field value in column B
+      worksheet.getCell(`A${rowIndex + 1}`).value = row[0].value;
+      worksheet.getCell(`B${rowIndex + 1}`).value = row[1].value;
 
       // Styling
-      worksheet.getCell(`A${rowIndex + 1}`).font = { bold: true }; // Bold for field name
+      worksheet.getCell(`A${rowIndex + 1}`).font = { bold: true };
       worksheet.getCell(`A${rowIndex + 1}`).alignment = {
         horizontal: "left",
         vertical: "middle",
@@ -198,16 +189,13 @@ const Dashboard = () => {
       };
     });
 
-    // Add draft data
     const usedNoPartInduk = new Set();
 
     dataDraft.forEach((draft) => {
-      // Check if no_part_induk has already been used
       const noPartInduk = usedNoPartInduk.has(draft.no_part_induk)
         ? " "
         : draft.no_part_induk || "-";
 
-      // If no_part_induk is not "-", add it to the set
       if (noPartInduk !== "-") {
         usedNoPartInduk.add(noPartInduk);
       }
@@ -248,17 +236,33 @@ const Dashboard = () => {
       });
     }
 
-    // Simpan file Excel
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    const url = URL.createObjectURL(blob);
+    const now = new Date();
+    const formattedDate = now
+      .toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, ""); // Format: DDMMYYYY
 
-    // Trigger download
+    const formattedTime = now
+      .toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+      .replace(/:/g, ""); // Format: HHMMSS
+
+    const fileName = `laporan-${formattedDate}-${formattedTime}.xlsx`;
+
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "report.xlsx";
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -289,8 +293,6 @@ const Dashboard = () => {
 
     try {
       exportToExcel();
-
-      console.log(dataDraft);
     } catch (error) {
       console.error("Error generate laporan: ", error);
     }
@@ -314,15 +316,28 @@ const Dashboard = () => {
     try {
       const response = await axios.get("/api/draftlaporan");
       setCartItems(response.data.rows);
+
+      const selectedKeys = response.data.rows
+        .map((item) => {
+          const matchingRow = initialData.find(
+            (row) => row.nomor_pi === item.no_part
+          );
+          return matchingRow ? matchingRow.key : null;
+        })
+        .filter((key) => key !== null);
+
+      setSelectedRowKeys(selectedKeys);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching draft laporan:", error);
     } finally {
       setLoading(false);
     }
   };
   useEffect(() => {
-    fetchDraftLaporan();
-  }, []);
+    if (initialData.length > 0) {
+      fetchDraftLaporan();
+    }
+  }, [initialData]);
 
   const handleRowClick = async (event, record) => {
     let paramsData = "";
@@ -345,6 +360,53 @@ const Dashboard = () => {
     if (!isCheckbox && !isCheckboxCell) {
       router.push(`/detail/${paramsData}`);
     }
+  };
+
+  const onSelectChange = async (newSelectedRowKeys, selectedRows) => {
+    try {
+      const newlySelectedRows = selectedRows.filter(
+        (row) => !selectedRowKeys.includes(row.key)
+      );
+
+      const unselectedKeys = selectedRowKeys.filter(
+        (key) => !newSelectedRowKeys.includes(key)
+      );
+
+      for (const row of newlySelectedRows) {
+        await axios.post("/api/draftlaporan/tambah", {
+          id_pi: row.key,
+          no_part: row.nomor_pi,
+          no_part_update: row.nomor_pi_update,
+        });
+      }
+
+      for (const key of unselectedKeys) {
+        const rowToDelete = initialData.find((row) => row.key === key);
+        if (rowToDelete) {
+          const draftItem = cartItems.find(
+            (item) => item.no_part === rowToDelete.nomor_pi
+          );
+          if (draftItem) {
+            await axios.post("/api/draftlaporan/hapus", {
+              id_draft: draftItem.id_draft,
+            });
+          }
+        }
+      }
+
+      setSelectedRowKeys(newSelectedRowKeys);
+
+      await fetchDraftLaporan();
+      await fetchDataDraft();
+    } catch (error) {
+      console.error("Error updating draft laporan:", error);
+    }
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+    preserveSelectedRowKeys: true,
   };
 
   const columns = [
@@ -383,7 +445,7 @@ const Dashboard = () => {
   useEffect(() => {
     setFilteredData(initialData);
     fetchPartInduk();
-  }, []); // Effect untuk fetch data awal
+  }, []);
 
   useEffect(() => {
     setFilteredData(initialData);
@@ -395,16 +457,27 @@ const Dashboard = () => {
         id_draft: itemKey,
       });
 
-      if (response.status == 200) {
-        fetchDraftLaporan();
-      }
+      if (response.status === 200) {
+        const removedItem = cartItems.find((item) => item.id_draft === itemKey);
+        const matchingRow = initialData.find(
+          (row) => row.nomor_pi === removedItem.no_part
+        );
 
-      const totalPages = Math.ceil((cartItems.length - 1) / cartPageSize);
-      if (currentCartPage > totalPages && totalPages > 0) {
-        setCurrentCartPage(totalPages);
+        if (matchingRow) {
+          setSelectedRowKeys((prev) =>
+            prev.filter((key) => key !== matchingRow.key)
+          );
+        }
+
+        await fetchDraftLaporan();
+
+        const totalPages = Math.ceil((cartItems.length - 1) / cartPageSize);
+        if (currentCartPage > totalPages && totalPages > 0) {
+          setCurrentCartPage(totalPages);
+        }
       }
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error removing item:", error);
     }
   };
 
@@ -414,21 +487,16 @@ const Dashboard = () => {
         id_draft: "clear",
       });
 
-      if (response.status == 200) {
-        fetchDraftLaporan();
-      }
-
-      const totalPages = Math.ceil((cartItems.length - 1) / cartPageSize);
-      if (currentCartPage > totalPages && totalPages > 0) {
-        setCurrentCartPage(totalPages);
+      if (response.status === 200) {
+        setCartItems([]);
+        setSelectedRowKeys([]);
+        setCurrentCartPage(1);
       }
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error clearing cart:", error);
     }
-    setCurrentCartPage(1);
   };
 
-  // Calculate paginated cart items
   const getPaginatedCartItems = () => {
     const startIndex = (currentCartPage - 1) * cartPageSize;
     return cartItems.slice(startIndex, startIndex + cartPageSize);
@@ -480,22 +548,8 @@ const Dashboard = () => {
           {/* Table Section */}
           <div style={{ flex: 2 }}>
             <Flex gap="middle" vertical>
-              {/* <Flex align="center" gap="middle">
-                <Button
-                  type="primary"
-                  onClick={start}
-                  disabled={!hasSelected}
-                  loading={loading}
-                >
-                  Export selected data
-                </Button>
-                {hasSelected
-                  ? `Selected ${selectedRowKeys.length} items`
-                  : null}
-              </Flex> */}
-
               <Table
-                // rowSelection={rowSelection}
+                rowSelection={rowSelection}
                 columns={columns}
                 dataSource={filteredData}
                 pagination={{

@@ -92,11 +92,11 @@ const DetailPartInduk = ({ nomor }) => {
         key: row.id_pa,
         nomor_pa: row.no_part || "-",
         nomor_pa_update: row.no_part_update || "-",
-        supplier: row.nama_lokal
-          ? row.nama_lokal
-          : " " || row.nama_impor
-          ? row.nama_impor
-          : " ",
+        supplier: (() => {
+          const lokal = row.nama_lokal ? `${row.nama_lokal} (lokal)` : "";
+          const impor = row.nama_impor ? `${row.nama_impor} (impor)` : "";
+          return [lokal, impor].filter(Boolean).join(", ") || "-";
+        })(),
         maker: row.nama_maker || "-",
         part_name: row.nama || "",
         no_cmw: row.no_cmw,
